@@ -1,61 +1,74 @@
 "use strict";
 const Limiter = require("ratelimiter");
 const ms = require("ms");
-const debug = require('debug')('egg-ratelimiter');
+const debug = require("debug")("egg-ratelimiter");
 async function thenify(fn) {
-    return await new Promise((resolve, reject) => {
-        function callback(err, res) {
-            if (err)
-                return reject(err);
-            return resolve(res);
-        }
-        fn(callback);
-    });
+	return await new Promise((resolve, reject) => {
+		function callback(err, res) {
+			if (err) return reject(err);
+			return resolve(res);
+		}
+		fn(callback);
+	});
 }
 module.exports = (opts = {}) => {
-    const { remaining = 'X-RateLimit-Remaining', reset = 'X-RateLimit-Reset', total = 'X-RateLimit-Limit' } = opts.headers || {};
-    let actionKeys = [];
-    opts.router.forEach(item => actionKeys.push(item.path));
-    return async (ctx, next) => {
-        // 如果没有限制配置，则直接返回
-        if (actionKeys.length === 0)
-            return await next();
-        // 如果当前访问URL 路径不在actionKeys中 则直接返回
-        if (actionKeys.indexOf(ctx.url) === -1)
-            return await next();
-        //通过ips获取 nginx代理层真实IP，需要配置 config.proxy = true;
-        const ips = ctx.ips.length > 0 ? ctx.ips[0] !== '127.0.0.1' ? ctx.ips[0] : ctx.ips[1] : ctx.ip;
-        const opt = opts.router[actionKeys.indexOf(ctx.url)]; //请求路径['/']
-        opt.duration = ms(opt.time);
-        const id = ips;
-        if (id == null)
-            return await next();
-        // initialize limiter
-        const limiter = new Limiter(Object.assign({}, opt, { id: `${id}:${ctx.url}`, db: opts.db || ctx.app.redis }));
-        // check limit
-        const limit = await thenify(limiter.get.bind(limiter));
-        // check if current call is legit
-        const calls = limit.remaining > 0 ? limit.remaining - 1 : 0;
-        // header fields
-        const headers = {
-            [remaining]: calls,
-            [reset]: limit.reset,
-            [total]: limit.total
-        };
-        ctx.set(headers);
-        debug('remaining %s/%s %s', calls, limit.total, id);
-        if (limit.remaining)
-            return await next();
-        const delta = (limit.reset * 1000 - Date.now()) | 0;
-        const after = (limit.reset - Date.now() / 1000) | 0;
-        ctx.set('Retry-After', after);
-        ctx.status = 429;
-        ctx.body = opt.message || `Rate limit exceeded, retry in ${ms(delta, { long: true })}.`;
-        if (opts.throw) {
-            ctx.throw(ctx.status, ctx.body, {
-                headers
-            });
-        }
-    };
+	const {
+		remaining = "X-RateLimit-Remaining",
+		reset = "X-RateLimit-Reset",
+		total = "X-RateLimit-Limit",
+		contentType = "text-plain; charset=utf-8",
+	} = opts.headers || {};
+	let actionKeys = [];
+	opts.router.forEach((item) => actionKeys.push(item.path));
+	return async (ctx, next) => {
+		// 如果没有限制配置，则直接返回
+		if (actionKeys.length === 0) return await next();
+		// 如果当前访问URL 路径不在actionKeys中 则直接返回
+		if (actionKeys.indexOf(ctx.url) === -1) return await next();
+		//通过ips获取 nginx代理层真实IP，需要配置 config.proxy = true;
+		const ips =
+			ctx.ips.length > 0
+				? ctx.ips[0] !== "127.0.0.1"
+					? ctx.ips[0]
+					: ctx.ips[1]
+				: ctx.ip;
+		const opt = opts.router[actionKeys.indexOf(ctx.url)]; //请求路径['/']
+		opt.duration = ms(opt.time);
+		const id = ips;
+		if (id == null) return await next();
+		// initialize limiter
+		const limiter = new Limiter(
+			Object.assign({}, opt, {
+				id: `${id}:${ctx.url}`,
+				db: opts.db || ctx.app.redis,
+			})
+		);
+		// check limit
+		const limit = await thenify(limiter.get.bind(limiter));
+		// check if current call is legit
+		const calls = limit.remaining > 0 ? limit.remaining - 1 : 0;
+		// header fields
+		const headers = {
+			[remaining]: calls,
+			[reset]: limit.reset,
+			[total]: limit.total,
+			"content-type": contentType,
+		};
+		ctx.set(headers);
+		debug("remaining %s/%s %s", calls, limit.total, id);
+		if (limit.remaining) return await next();
+		const delta = (limit.reset * 1000 - Date.now()) | 0;
+		const after = (limit.reset - Date.now() / 1000) | 0;
+		ctx.set("Retry-After", after);
+		ctx.status = 429;
+		ctx.body =
+			opt.message ||
+			`Rate limit exceeded, retry in ${ms(delta, { long: true })}.`;
+		if (opts.throw) {
+			ctx.throw(ctx.status, ctx.body, {
+				headers,
+			});
+		}
+	};
 };
 //# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicmF0ZWxpbWl0ZXIuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi8uLi8uLi8uLi8uLi9zcmMvbGliL3BsdWdpbi9lZ2ctcmF0ZWxpbWl0ZXIvYXBwL21pZGRsZXdhcmUvcmF0ZWxpbWl0ZXIudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IjtBQUFBLHVDQUF1QztBQUN2Qyx5QkFBMEI7QUFDMUIsTUFBTSxLQUFLLEdBQUksT0FBTyxDQUFDLE9BQU8sQ0FBQyxDQUFDLGlCQUFpQixDQUFDLENBQUM7QUFtRW5ELEtBQUssa0JBQWtCLEVBQUU7SUFDckIsT0FBTyxNQUFNLElBQUksT0FBTyxDQUFDLENBQUMsT0FBTyxFQUFFLE1BQU0sRUFBRSxFQUFFO1FBQzNDLGtCQUFrQixHQUFHLEVBQUUsR0FBRztZQUN4QixJQUFJLEdBQUc7Z0JBQUUsT0FBTyxNQUFNLENBQUMsR0FBRyxDQUFDLENBQUM7WUFDNUIsT0FBTyxPQUFPLENBQUMsR0FBRyxDQUFDLENBQUM7UUFDdEIsQ0FBQztRQUNELEVBQUUsQ0FBQyxRQUFRLENBQUMsQ0FBQztJQUNmLENBQUMsQ0FBQyxDQUFDO0FBQ1AsQ0FBQztBQXpFRCxpQkFBUyxDQUFDLE9BQVksRUFBRSxFQUFFLEVBQUU7SUFFeEIsTUFBTSxFQUNGLFNBQVMsR0FBRyx1QkFBdUIsRUFDbkMsS0FBSyxHQUFHLG1CQUFtQixFQUMzQixLQUFLLEdBQUcsbUJBQW1CLEVBQzlCLEdBQUcsSUFBSSxDQUFDLE9BQU8sSUFBSSxFQUFFLENBQUM7SUFFdkIsSUFBSSxVQUFVLEdBQUcsRUFBRSxDQUFDO0lBQ3BCLElBQUksQ0FBQyxNQUFNLENBQUMsT0FBTyxDQUFDLElBQUksQ0FBQyxFQUFFLENBQUMsVUFBVSxDQUFDLElBQUksQ0FBQyxJQUFJLENBQUMsSUFBSSxDQUFDLENBQUMsQ0FBQztJQUV4RCxPQUFPLEtBQUssRUFBRSxHQUFHLEVBQUUsSUFBSSxFQUFpQixFQUFFO1FBRXRDLGlCQUFpQjtRQUNqQixJQUFJLFVBQVUs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
