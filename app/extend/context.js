@@ -1,7 +1,7 @@
 "use strict";
 const Limiter = require("ratelimiter");
 const ms = require("ms");
-const debug = require('debug')('egg-ratelimiter');
+const debug = require('debug')('egg-ratelimiterplus');
 async function thenify(fn) {
     return await new Promise((resolve, reject) => {
         function callback(err, res) {
@@ -15,7 +15,7 @@ async function thenify(fn) {
 module.exports = {
     async Limit(opts = {}) {
         const ctx = this;
-        const { remaining = 'X-RateLimit-Remaining', reset = 'X-RateLimit-Reset', total = 'X-RateLimit-Limit' } = ctx.app.config.ratelimiter.headers || {};
+        const { remaining = 'X-RateLimit-Remaining', reset = 'X-RateLimit-Reset', total = 'X-RateLimit-Limit' } = ctx.app.config.ratelimiterplus.headers || {};
         //通过ips获取 nginx代理层真实IP，需要配置 config.proxy = true;
         const ips = ctx.ips.length > 0 ? ctx.ips[0] !== '127.0.0.1' ? ctx.ips[0] : ctx.ips[1] : ctx.ip;
         const opt = opts; //请求路径['/']
@@ -24,7 +24,7 @@ module.exports = {
         if (id == null)
             return false;
         // initialize limiter
-        const limiter = new Limiter(Object.assign({}, opt, { id: `${id}:${ctx.url}`, db: ctx.app.config.ratelimiter.db || ctx.app.redis }));
+        const limiter = new Limiter(Object.assign({}, opt, { id: `${id}:${ctx.url}`, db: ctx.app.config.ratelimiterplus.db || ctx.app.redis }));
         // check limit
         const limit = await thenify(limiter.get.bind(limiter));
         // check if current call is legit

@@ -1,7 +1,7 @@
 "use strict";
 const Limiter = require("ratelimiter");
 const ms = require("ms");
-const debug = require("debug")("egg-ratelimiter");
+const debug = require("debug")("egg-ratelimiterplus");
 async function thenify(fn) {
 	return await new Promise((resolve, reject) => {
 		function callback(err, res) {

@@ -1,9 +1,9 @@
 {
-  "name": "egg-ratelimiter",
-  "version": "0.1.0",
+  "name": "egg-ratelimiterplus",
+  "version": "0.1.1",
   "description": "Abstract rate limiter for eggjs",
   "eggPlugin": {
-    "name": "ratelimiter"
+    "name": "ratelimiterplus"
   },
   "dependencies": {
     "ratelimiter": "^3.2.0",
@@ -17,8 +17,8 @@
   },
   "keywords": [
     "egg",
-    "ratelimiter",
-    "egg-ratelimiter"
+    "ratelimiterplus",
+    "egg-ratelimiterplus"
   ],
   "engines": {
     "node": ">=8.9.0"
@@ -28,12 +28,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ZQun/egg-ratelimiter.git"
+    "url": "git+https://github.com/feliming/egg-ratelimiterplus.git"
   },
-  "author": "https://github.com/ZQun",
+  "author": "https://github.com/feliming",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/ZQun/egg-ratelimiter/issues"
+    "url": "https://github.com/feliming/egg-ratelimiterplus/issues"
   },
-  "homepage": "https://github.com/ZQun/egg-ratelimiter#readme"
+  "homepage": "https://github.com/feliming/egg-ratelimiterplus#readme"
 }

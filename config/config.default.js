@@ -2,7 +2,7 @@
 module.exports = appInfo => {
     const config = exports = {};
     config.proxy = true;
-    config.ratelimiter = {
+    config.ratelimiterplus = {
         app: true,
         headers: {
             remaining: 'X-RateLimit-Remaining',

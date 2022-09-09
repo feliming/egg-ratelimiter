@@ -1,14 +1,16 @@
-# egg-ratelimiter
+# egg-ratelimiterplus
 
 Rate limiter for Egg.js backed by Redis.
+Fork 自：https://github.com/ZQun/egg-ratelimiter
 
-- 支持egg [js] [ts]
-- 支持Controller控制器内分别配置请求速率限制
+- 支持 egg [js] [ts]
+- 支持 Controller 控制器内分别配置请求速率限制
+- 支持设置限流时候的响应头 Content-Type，默认是 `text/plain; charset=utf-8`，可以设置为 `application/json`
 
 ## Install
 
 ```bash
-$ npm i egg-ratelimiter --save
+$ npm i egg-ratelimiterplus --save
 ```
 
 你还需要安装[egg-redis](https://www.npmjs.com/package/egg-redis) 具体参考文档
@@ -23,9 +25,9 @@ Change `${app_root}/config/plugin.ts` to enable ratelimiter plugin:
 
 ```typescript
 export = {
-  ratelimiter: {
+  ratelimiterplus: {
     enable: true,
-    package: 'egg-ratelimiter',
+    package: 'egg-ratelimiterplus',
   }
 }
 ```
@@ -35,7 +37,7 @@ Configure ratelimiter information in `${app_root}/config/config.default.ts`:
 **Instructions**
 
 ```typescript
-config.ratelimiter = {
+config.ratelimiterplus = {
     db: {},//如已配置egg-redis 可删除此配置
     router: [
       {
