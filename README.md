@@ -38,6 +38,9 @@ Configure ratelimiter information in `${app_root}/config/config.default.ts`:
 
 ```typescript
 config.ratelimiterplus = {
+  	headers: {
+			contentType: "application/json",
+		},
     db: {},//如已配置egg-redis 可删除此配置
     router: [
       {
